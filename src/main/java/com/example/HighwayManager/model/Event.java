@@ -13,16 +13,18 @@ public class Event {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "date", nullable = false)
+    private LocalDate date;
+
     @ManyToOne
     @JoinColumn(name = "team_id")
     private Team team;
 
-    @Column(name = "date", nullable = false)
-    private LocalDate date;
+    @ManyToOne
+    @JoinColumn(name = "type_id")
+    private EventType type;
 
-    @Column(name = "type", nullable = false)
-    private String type;
-
-    @Column(name = "statut")
-    private String statut;
+    @ManyToOne
+    @JoinColumn(name = "status_id")
+    private Status status;
 }

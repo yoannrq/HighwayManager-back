@@ -3,7 +3,8 @@ DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS reports CASCADE;
 DROP TABLE IF EXISTS roles CASCADE;
 DROP TABLE IF EXISTS events CASCADE;
-DROP TABLE IF EXISTS eventtypes CASCADE;
+DROP TABLE IF EXISTS status CASCADE;
+DROP TABLE IF EXISTS event_types CASCADE;
 DROP TABLE IF EXISTS team_has_users CASCADE;
 
 CREATE TABLE roles (
@@ -11,9 +12,14 @@ CREATE TABLE roles (
                        name VARCHAR(250) NOT NULL UNIQUE
 );
 
-CREATE TABLE eventtypes (
+CREATE TABLE event_types (
                             id SERIAL PRIMARY KEY,
                             name VARCHAR(250) NOT NULL UNIQUE
+);
+
+CREATE TABLE status (
+                             id SERIAL PRIMARY KEY,
+                             name VARCHAR(250) NOT NULL UNIQUE
 );
 
 CREATE TABLE users (
@@ -43,11 +49,13 @@ CREATE TABLE team_has_users (
 
 CREATE TABLE events (
                         id SERIAL PRIMARY KEY,
-                        team_id INT,
                         date DATE NOT NULL,
-                        type VARCHAR(250) NOT NULL,
-                        statut VARCHAR(250),
-                        FOREIGN KEY (team_id) REFERENCES teams(id)
+                        team_id INT,
+                        type_id INT,
+                        status_id INT,
+                        FOREIGN KEY (team_id) REFERENCES teams(id),
+                        FOREIGN KEY (type_id) REFERENCES event_types(id),
+                        FOREIGN KEY (status_id) REFERENCES status(id)
 );
 
 CREATE TABLE reports (

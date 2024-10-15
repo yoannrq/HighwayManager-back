@@ -5,8 +5,8 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "event_types")
-public class EventType {
+@Table(name = "status")
+public class Status {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
