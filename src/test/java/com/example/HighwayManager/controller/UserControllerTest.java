@@ -1,6 +1,8 @@
 package com.example.HighwayManager.controller;
 
+import com.example.HighwayManager.dto.UserCreationDTO;
 import com.example.HighwayManager.dto.UserDTO;
+import com.example.HighwayManager.service.RoleService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -9,7 +11,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.example.HighwayManager.service.UserService;
 import com.example.HighwayManager.model.User;
-
+import com.example.HighwayManager.model.Role;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,6 +25,9 @@ class UserControllerTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private RoleService roleService;
+
     @InjectMocks
     private UserController userController;
 
@@ -34,11 +39,16 @@ class UserControllerTest {
     @Test
     void createUser_WithNewEmail_ShouldCreateUser() {
         // Arrange
-        User userBody = new User();
+        Role role = new Role();
+        role.setId(1L);
+        role.setName("USER");
+
+        UserCreationDTO userBody = new UserCreationDTO();
         userBody.setEmail("nouveau@email.com");
         userBody.setPassword("motdepasse");
         userBody.setFirstname("John");
         userBody.setLastname("Doe");
+        userBody.setRoleId(1L);
 
         User savedUser = new User();
         savedUser.setId(1L);
@@ -50,6 +60,7 @@ class UserControllerTest {
         when(userService.getUserByEmail("nouveau@email.com")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("motdepasse")).thenReturn("motdepasseHashé");
         when(userService.saveUser(any(User.class))).thenReturn(savedUser);
+        when(roleService.getRoleById(1L)).thenReturn(Optional.of(role));
 
         // Act
         UserDTO result = userController.createUser(userBody);
@@ -60,15 +71,17 @@ class UserControllerTest {
         assertEquals("John", result.getFirstname());
         assertEquals("Doe", result.getLastname());
         assertEquals(1L, result.getId());
-        assertNull(result.getPassword()); // Le DTO ne devrait pas contenir le mot de passe
+        assertNull(result.getPassword());
+        assertEquals("USER", result.getRoleName());
         verify(passwordEncoder).encode("motdepasse");
         verify(userService).saveUser(any(User.class));
+        verify(roleService).getRoleById(1L);
     }
 
     @Test
     void createUser_WithExistingEmail_ShouldThrowException() {
         // Arrange
-        User user = new User();
+        UserCreationDTO user = new UserCreationDTO();
         user.setEmail("existant@email.com");
 
         when(userService.getUserByEmail("existant@email.com")).thenReturn(Optional.of(new User()));

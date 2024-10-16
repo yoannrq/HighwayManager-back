@@ -1,7 +1,10 @@
 package com.example.HighwayManager.controller;
 
+import com.example.HighwayManager.dto.UserCreationDTO;
 import com.example.HighwayManager.dto.UserDTO;
+import com.example.HighwayManager.model.Role;
 import com.example.HighwayManager.model.User;
+import com.example.HighwayManager.service.RoleService;
 import com.example.HighwayManager.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,30 +19,42 @@ import java.util.Optional;
 public class UserController {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
+    private final RoleService roleService;
 
     @Autowired
-    public UserController(UserService userService, PasswordEncoder passwordEncoder) {
+    public UserController(UserService userService, PasswordEncoder passwordEncoder, RoleService roleService) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
+        this.roleService = roleService;
     }
 
     /**
      * Create - Add a new user
      * @param userBody as an object user
      * @return The user object saved
-     * @throws IllegalStateException if email is already used
+     * @throws IllegalStateException if email is already used or role not found
      */
     @PostMapping("/user")
-    public UserDTO createUser(@RequestBody User userBody) {
+    public UserDTO createUser(@RequestBody UserCreationDTO userBody) {
         if (userService.getUserByEmail(userBody.getEmail()).isPresent()) {
             throw new IllegalStateException("Cet email est déjà utilisé");
         }
 
-        userBody.setPassword(passwordEncoder.encode(userBody.getPassword()));
+        User newUser = new User();
+        newUser.setFirstname(userBody.getFirstname());
+        newUser.setLastname(userBody.getLastname());
+        newUser.setEmail(userBody.getEmail());
+        newUser.setPassword(passwordEncoder.encode(userBody.getPassword()));
 
-        User savedUser = userService.saveUser(userBody);
+        Role role = roleService.getRoleById(userBody.getRoleId())
+                .orElseThrow(() -> new IllegalArgumentException("Rôle non trouvé"));
+        newUser.setRole(role);
+
+
+        User savedUser = userService.saveUser(newUser);
         return new UserDTO(savedUser);
     }
+
 
     /**
      * Read - Get one user
@@ -79,7 +94,7 @@ public class UserController {
      * @throws IllegalStateException if email is already used
      */
     @PatchMapping("/user/{id}")
-    public UserDTO updateUser(@PathVariable final long id, @RequestBody User userBody) {
+    public UserDTO updateUser(@PathVariable final long id, @RequestBody UserCreationDTO userBody) {
         Optional<User> optionalUser = userService.getUserById(id);
 
         if (optionalUser.isEmpty()) {
@@ -107,6 +122,12 @@ public class UserController {
 
         if (userBody.getPassword() != null && !userBody.getPassword().isEmpty()) {
             userToUpdate.setPassword(passwordEncoder.encode(userBody.getPassword()));
+        }
+
+        if (userBody.getRoleId() != null) {
+            Role role = roleService.getRoleById(userBody.getRoleId())
+                    .orElseThrow(() -> new IllegalArgumentException("Rôle non trouvé"));
+            userToUpdate.setRole(role);
         }
 
         User savedUser = userService.saveUser(userToUpdate);
