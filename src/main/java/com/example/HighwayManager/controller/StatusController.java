@@ -4,6 +4,8 @@ import com.example.HighwayManager.model.Status;
 import com.example.HighwayManager.service.StatusService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import com.example.HighwayManager.exception.IllegalStateException;
+import com.example.HighwayManager.exception.IllegalArgumentException;
 
 import java.util.Optional;
 
@@ -21,7 +23,7 @@ public class StatusController {
      * Create - Add a new status
      * @param status as an object status
      * @return the status object saved
-     * @throws IllegalStateException if name is already used
+     * @throws IllegalArgumentException if name is already used
      */
     @PostMapping("/status")
     public Status createStatus(@RequestBody Status status) {

@@ -9,6 +9,8 @@ import com.example.HighwayManager.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import com.example.HighwayManager.exception.IllegalStateException;
+import com.example.HighwayManager.exception.IllegalArgumentException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +35,7 @@ public class UserController {
      * @param userBody as an object user
      * @return The user object saved
      * @throws IllegalStateException if email is already used or role not found
+     * @throws IllegalArgumentException if role is not found
      */
     @PostMapping("/user")
     public UserDTO createUser(@RequestBody UserCreationDTO userBody) {
@@ -59,7 +62,8 @@ public class UserController {
     /**
      * Read - Get one user
      * @param id The id of the user
-     * @return user || null
+     * @return user
+     * @throws IllegalArgumentException if user is not found
      */
     @GetMapping("/user/{id}")
     public UserDTO getUserById(@PathVariable final long id) {
@@ -68,7 +72,7 @@ public class UserController {
             User user = optionalUser.get();
             return new UserDTO(user);
         } else {
-            return null;
+            throw new IllegalArgumentException("Utilisateur introuvable");
         }
     }
 

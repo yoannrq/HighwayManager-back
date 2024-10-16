@@ -2,6 +2,7 @@ package com.example.HighwayManager.controller;
 
 import com.example.HighwayManager.model.EventType;
 import com.example.HighwayManager.service.EventTypeService;
+import com.example.HighwayManager.exception.IllegalStateException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
