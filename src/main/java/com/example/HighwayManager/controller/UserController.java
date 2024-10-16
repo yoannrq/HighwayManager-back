@@ -1,14 +1,18 @@
 package com.example.HighwayManager.controller;
 
+import com.example.HighwayManager.dto.UserDTO;
 import com.example.HighwayManager.model.User;
 import com.example.HighwayManager.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
+@RequestMapping("/api")
 public class UserController {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
@@ -21,23 +25,20 @@ public class UserController {
 
     /**
      * Create - Add a new user
-     * @param user as an object user
+     * @param userBody as an object user
      * @return The user object saved
      * @throws IllegalStateException if email is already used
      */
     @PostMapping("/user")
-    public User createUser(@RequestBody User user) {
-        //Verify if email is not already used in database
-        Optional<User> existingUser = userService.getUserByEmail(user.getEmail());
-        if (existingUser.isPresent()) {
+    public UserDTO createUser(@RequestBody User userBody) {
+        if (userService.getUserByEmail(userBody.getEmail()).isPresent()) {
             throw new IllegalStateException("Cet email est déjà utilisé");
         }
 
-        // Password hached before saving user
-        String hashedPassword = passwordEncoder.encode(user.getPassword());
-        user.setPassword(hashedPassword);
+        userBody.setPassword(passwordEncoder.encode(userBody.getPassword()));
 
-        return userService.saveUser(user);
+        User savedUser = userService.saveUser(userBody);
+        return new UserDTO(savedUser);
     }
 
     /**
@@ -46,65 +47,70 @@ public class UserController {
      * @return user || null
      */
     @GetMapping("/user/{id}")
-    public User getUserById(@PathVariable final long id) {
-        Optional<User> user = userService.getUserById(id);
-        return user.orElse(null);
+    public UserDTO getUserById(@PathVariable final long id) {
+        Optional<User> optionalUser = userService.getUserById(id);
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            return new UserDTO(user);
+        } else {
+            return null;
+        }
     }
 
     /**
      * Read - Get all users
-     * @return - An Iterable object of Users
+     * @return - List of users
      */
     @GetMapping("/user")
-    public Iterable<User> getUsers() {
-        return userService.getAllUsers();
+    public Iterable<UserDTO> getUsers() {
+        Iterable<User> users = userService.getAllUsers();
+        List<UserDTO> userDTOs = new ArrayList<>();
+        for (User user : users) {
+            userDTOs.add(new UserDTO(user));
+        }
+        return userDTOs;
     }
 
     /**
      * Patch - Update an existing user
      * @param id - The id of the user to update
-     * @param userBody - The user object to update
-     * @return user || null - The user object updated
+     * @param userBody - The User object containing updated fields
+     * @return UserDTO || null - The updated user as a DTO
      * @throws IllegalStateException if email is already used
      */
     @PatchMapping("/user/{id}")
-    public User updateUser(@PathVariable final long id, @RequestBody User userBody) {
-        Optional<User> userInDatabase = userService.getUserById(id);
-        if (userInDatabase.isPresent()) {
-            User userToUpdate = userInDatabase.get();
+    public UserDTO updateUser(@PathVariable final long id, @RequestBody User userBody) {
+        Optional<User> optionalUser = userService.getUserById(id);
 
-            String firstname = userBody.getFirstname();
-            if (firstname != null && !firstname.isEmpty()) {
-                userToUpdate.setFirstname(firstname);
-            }
-
-            String lastname = userBody.getLastname();
-            if (lastname != null && !lastname.isEmpty()) {
-                userToUpdate.setLastname(lastname);
-            }
-
-            String email = userBody.getEmail();
-            if (email != null && !email.isEmpty()) {
-            //Verify if email is not already used in database
-            Optional<User> isEmailAlreadyUsed = userService.getUserByEmail(email);
-                if (isEmailAlreadyUsed.isEmpty()) {
-                    userToUpdate.setEmail(email);
-                } else {
-                    throw new IllegalStateException("Cet email est déjà utilisé");
-                }
-            }
-
-            String password = userBody.getPassword();
-            if (password != null && !password.isEmpty()) {
-                // Password hached before insertion
-                String hashedPassword = passwordEncoder.encode(password);
-                userToUpdate.setPassword(hashedPassword);
-            }
-
-            return userService.saveUser(userToUpdate);
-        } else {
+        if (optionalUser.isEmpty()) {
             return null;
         }
+
+        User userToUpdate = optionalUser.get();
+
+        if (userBody.getFirstname() != null && !userBody.getFirstname().isEmpty()) {
+            userToUpdate.setFirstname(userBody.getFirstname());
+        }
+
+        if (userBody.getLastname() != null && !userBody.getLastname().isEmpty()) {
+            userToUpdate.setLastname(userBody.getLastname());
+        }
+
+        if (userBody.getEmail() != null && !userBody.getEmail().isEmpty()) {
+            if (!userToUpdate.getEmail().equals(userBody.getEmail())) {
+                if (userService.getUserByEmail(userBody.getEmail()).isPresent()) {
+                    throw new IllegalStateException("Cet email est déjà utilisé");
+                }
+                userToUpdate.setEmail(userBody.getEmail());
+            }
+        }
+
+        if (userBody.getPassword() != null && !userBody.getPassword().isEmpty()) {
+            userToUpdate.setPassword(passwordEncoder.encode(userBody.getPassword()));
+        }
+
+        User savedUser = userService.saveUser(userToUpdate);
+        return new UserDTO(savedUser);
     }
 
     /**

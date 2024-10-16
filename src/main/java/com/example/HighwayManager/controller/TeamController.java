@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
 @RestController
+@RequestMapping("/api")
 public class TeamController {
     private final TeamService teamService;
     private final EntityValidator entityValidator;

@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 @RestController
+@RequestMapping("/api")
 public class EventController {
 
     private final EventService eventService;
