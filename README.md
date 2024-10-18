@@ -28,13 +28,16 @@ Le projet utilise les technologies suivantes :
 | Spring Boot | Facilité de configuration, productivité accrue et écosystème riche pour le développement backend |
 | PostgreSQL | Fiabilité, performances et fonctionnalités avancées, adaptées aux besoins d'une application d'entreprise |
 
+## 🚀 Améliorations à venir
+
+- Implémentation complète de DTO (Data Transfer Objects)
+- Validation des données entrantes
+- Ajout de JWT et Gestion des autorisations
+- ...
+
 ## 📥 Installation
 
 _Instructions d'installation à venir_
-
-## 🚀 Démarrage rapide
-
-_Guide de démarrage rapide à venir_
 
 ## 🤝 Contribution
 
