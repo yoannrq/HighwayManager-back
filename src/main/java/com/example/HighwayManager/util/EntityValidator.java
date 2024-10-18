@@ -1,6 +1,7 @@
 package com.example.HighwayManager.util;
 
 import com.example.HighwayManager.exception.EntityNotFoundException;
+import com.example.HighwayManager.model.User;
 import com.example.HighwayManager.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -17,7 +18,7 @@ public class EntityValidator {
     private final UserService userService;
 
     /**
-     * Validates and retrieves a Team by its ID.
+     * Validates a Team by its ID.
      *
      * @param teamId The ID of the team to validate
      * @throws EntityNotFoundException if the team is not found
@@ -28,7 +29,7 @@ public class EntityValidator {
     }
 
     /**
-     * Validates and retrieves an EventType by its ID.
+     * Validates an EventType by its ID.
      *
      * @param eventTypeId The ID of the event type to validate
      * @throws EntityNotFoundException if the event type is not found
@@ -39,7 +40,7 @@ public class EntityValidator {
     }
 
     /**
-     * Validates and retrieves a Status by its ID.
+     * Validates a Status by its ID.
      *
      * @param statusId The ID of the status to validate
      * @throws EntityNotFoundException if the status is not found
@@ -50,7 +51,7 @@ public class EntityValidator {
     }
 
     /**
-     * Validates and retrieves an Event by its ID.
+     * Validates an Event by its ID.
      *
      * @param eventId The ID of the event to validate
      * @throws EntityNotFoundException if the event is not found
@@ -61,7 +62,7 @@ public class EntityValidator {
     }
 
     /**
-     * Validates and retrieves a User by its ID.
+     * Validates a User by its ID.
      *
      * @param userId The ID of the user to validate
      * @throws EntityNotFoundException if the user is not found
@@ -70,5 +71,18 @@ public class EntityValidator {
         userService.getUserById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur", userId));
     }
+
+    /**
+     * Validates and return a User by its ID.
+     *
+     * @param userId The ID of the user to validate
+     * @return User the user object
+     * @throws EntityNotFoundException if the user is not found
+     */
+    public User validateAndGetUser(Long userId) {
+        return userService.getUserById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Utilisateur", userId));
+    }
+
 
 }

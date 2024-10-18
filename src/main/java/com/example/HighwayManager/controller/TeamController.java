@@ -1,5 +1,7 @@
 package com.example.HighwayManager.controller;
 
+import com.example.HighwayManager.dto.TeamCreationDTO;
+import com.example.HighwayManager.dto.TeamDTO;
 import com.example.HighwayManager.model.Team;
 import com.example.HighwayManager.model.User;
 import com.example.HighwayManager.service.TeamService;
@@ -8,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import com.example.HighwayManager.exception.IllegalStateException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -29,7 +33,7 @@ public class TeamController {
      * @throws  IllegalStateException if team name is already used
      */
     @PostMapping("/team")
-    public Team createTeam(@RequestBody Team teamBody) {
+    public TeamDTO createTeam(@RequestBody TeamCreationDTO teamBody) {
         //Verify if name is not already in database
         Optional<Team> existingTeam = teamService.getTeamByName(teamBody.getTeamName());
         if (existingTeam.isPresent()) {
@@ -37,30 +41,45 @@ public class TeamController {
         }
 
         //Verify if the master is existing
-        User bodyMaster = teamBody.getMaster();
-        entityValidator.validateUser(bodyMaster.getId());
+        User master = entityValidator.validateAndGetUser(teamBody.getMasterId());
 
-        return teamService.saveTeam(teamBody);
+        Team newTeam = new Team();
+        newTeam.setTeamName(teamBody.getTeamName());
+        newTeam.setMaster(master);
+
+        Team savedTeam = teamService.saveTeam(newTeam);
+        return new TeamDTO(savedTeam);
     }
 
     /**
      * Read - Get one team by id
      * @param id - The id of the team
-     * @return A team object
+     * @return A TeamDTO object
+     * @throws IllegalArgumentException if team is not found
      */
     @GetMapping("/team/{id}")
-    public Team getTeamById(@PathVariable int id) {
-        Optional<Team> team = teamService.getTeamById(id);
-        return team.orElse(null);
+    public TeamDTO getTeamById(@PathVariable int id) {
+        Optional<Team> optionalTeam = teamService.getTeamById(id);
+        if (optionalTeam.isPresent()) {
+            return new TeamDTO(optionalTeam.get());
+        } else {
+            throw new IllegalArgumentException("Équipe non trouvée");
+        }
     }
+
 
     /**
      * Read - Get all teams
-     * @return - An iterable object of teams
+     * @return - List of teams
      */
     @GetMapping("/team")
-    public Iterable<Team> getAllTeams() {
-        return teamService.getAllTeams();
+    public List<TeamDTO> getAllTeams() {
+        Iterable<Team> teams = teamService.getAllTeams();
+        List<TeamDTO> teamDTOs = new ArrayList<>();
+        for (Team team : teams) {
+            teamDTOs.add(new TeamDTO(team));
+        }
+        return teamDTOs;
     }
 
     /**
@@ -68,36 +87,38 @@ public class TeamController {
      * @param id - The id of the team to update
      * @param teamBody - The team object to update
      * @return team || null - The team object updated
+     * @throws IllegalArgumentException if team is not found
      * @throws IllegalStateException if team name is already used
      */
     @PatchMapping("/team/{id}")
-    public Team updateTeam(@PathVariable int id, @RequestBody Team teamBody) {
+    public TeamDTO updateTeam(@PathVariable int id, @RequestBody TeamCreationDTO teamBody) {
         Optional<Team> teamInDatabase = teamService.getTeamById(id);
-        if (teamInDatabase.isPresent()) {
-            Team teamToUpdate = teamInDatabase.get();
 
-            String teamName = teamBody.getTeamName();
-            if (teamName != null && !teamName.isEmpty()) {
-                //Verify if team name is not already used in database
-                Optional<Team> isTeamNameAlreadyUsed = teamService.getTeamByName(teamName);
-                if (isTeamNameAlreadyUsed.isEmpty()) {
-                    teamToUpdate.setTeamName(teamName);
-                } else {
-                    throw new IllegalStateException("Ce nom d'équipe est déjà utilisé");
-                }
-            }
-
-            User userBody = teamBody.getMaster();
-            if (userBody != null && userBody.getId() != null) {
-                //Verify if the master is existing
-                entityValidator.validateUser(userBody.getId());
-                teamToUpdate.setMaster(userBody);
-            }
-
-            return teamService.saveTeam(teamToUpdate);
-        } else {
-            return null;
+        if (teamInDatabase.isEmpty()) {
+            throw new IllegalArgumentException("Équipe non trouvée");
         }
+
+        Team teamToUpdate = teamInDatabase.get();
+
+        String teamName = teamBody.getTeamName();
+        if (teamName != null && !teamName.isEmpty()) {
+            //Verify if team name is not already used in database
+            Optional<Team> isTeamNameAlreadyUsed = teamService.getTeamByName(teamName);
+            if (isTeamNameAlreadyUsed.isEmpty()) {
+                teamToUpdate.setTeamName(teamName);
+            } else {
+                throw new IllegalStateException("Ce nom d'équipe est déjà utilisé");
+            }
+        }
+
+        if (teamBody.getMasterId() != null) {
+            // Verify is the master is existing
+            User master = entityValidator.validateAndGetUser(teamBody.getMasterId());
+            teamToUpdate.setMaster(master);
+        }
+
+        Team updatedTeam = teamService.saveTeam(teamToUpdate);
+        return new TeamDTO(updatedTeam);
     }
 
     /**

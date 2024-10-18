@@ -81,7 +81,7 @@ public class UserController {
      * @return - List of users
      */
     @GetMapping("/user")
-    public Iterable<UserDTO> getUsers() {
+    public List<UserDTO> getUsers() {
         Iterable<User> users = userService.getAllUsers();
         List<UserDTO> userDTOs = new ArrayList<>();
         for (User user : users) {
@@ -94,7 +94,8 @@ public class UserController {
      * Patch - Update an existing user
      * @param id - The id of the user to update
      * @param userBody - The User object containing updated fields
-     * @return UserDTO || null - The updated user as a DTO
+     * @return UserDTO - The updated user as a DTO
+     * @throws IllegalArgumentException if user is not found
      * @throws IllegalStateException if email is already used
      */
     @PatchMapping("/user/{id}")
@@ -102,7 +103,7 @@ public class UserController {
         Optional<User> optionalUser = userService.getUserById(id);
 
         if (optionalUser.isEmpty()) {
-            return null;
+            throw new IllegalArgumentException("Utilisateur introuvable");
         }
 
         User userToUpdate = optionalUser.get();
