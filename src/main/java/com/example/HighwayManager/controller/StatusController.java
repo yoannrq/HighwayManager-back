@@ -1,5 +1,7 @@
 package com.example.HighwayManager.controller;
 
+import com.example.HighwayManager.dto.StatusCreationDTO;
+import com.example.HighwayManager.dto.StatusDTO;
 import com.example.HighwayManager.model.Status;
 import com.example.HighwayManager.service.StatusService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import com.example.HighwayManager.exception.IllegalStateException;
 import com.example.HighwayManager.exception.IllegalArgumentException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -21,69 +25,84 @@ public class StatusController {
 
     /**
      * Create - Add a new status
-     * @param status as an object status
+     * @param statusBody as an object status
      * @return the status object saved
      * @throws IllegalArgumentException if name is already used
      */
     @PostMapping("/status")
-    public Status createStatus(@RequestBody Status status) {
+    public StatusDTO createStatus(@RequestBody StatusCreationDTO statusBody) {
         //Verify if status name is not already used in database
-        Optional<Status> isStatusNameExist = statusService.getStatusByName(status.getName());
+        Optional<Status> isStatusNameExist = statusService.getStatusByName(statusBody.getName());
         if (isStatusNameExist.isPresent()) {
             throw new IllegalArgumentException("Ce nom de status est déjà utilisé");
         }
 
-        return statusService.saveStatus(status);
+        Status status = new Status();
+        status.setName(statusBody.getName());
+        Status savedStatus = statusService.saveStatus(status);
+        return new StatusDTO(savedStatus);
     }
 
     /**
      * Read - Get on status by id
      * @param id - The id of the status
-     * @return status || null
+     * @return status
+     * @throws IllegalArgumentException Status not found
      */
     @GetMapping("/status/{id}")
-    public Status getStatus(@PathVariable final long id) {
+    public StatusDTO getStatus(@PathVariable final long id) {
         Optional<Status> status = statusService.getStatusById(id);
-        return status.orElse(null);
+        if (status.isEmpty()) {
+            throw new IllegalArgumentException("Status non trouvé");
+        } else {
+            return new StatusDTO(status.get());
+        }
     }
 
     /**
      * Read - Get all status
-     * @return - An iterable object of Status
+     * @return - A list of Status
      */
     @GetMapping("/status")
-    public Iterable<Status> getAllStatus() {
-        return statusService.getAllStatus();
+    public List<StatusDTO> getAllStatus() {
+        Iterable<Status> allStatus = statusService.getAllStatus();
+        List<StatusDTO> statusList = new ArrayList<>();
+        for (Status status : allStatus) {
+            statusList.add(new StatusDTO(status));
+        }
+        return statusList;
     }
 
     /**
      * Patch - Update an existing status
      * @param id - the id of the status to update
      * @param statusBody - The status object to update
-     * @return status ||null - The status object updated
+     * @return status - The status object updated
      * @throws IllegalStateException if status name is already used
      */
     @PatchMapping("/status/{id}")
-    public Status updateStatus(@PathVariable final long id, @RequestBody Status statusBody) {
+    public StatusDTO updateStatus(@PathVariable final long id, @RequestBody StatusCreationDTO statusBody) {
         Optional<Status> statusInDatabase = statusService.getStatusById(id);
-        if (statusInDatabase.isPresent()) {
-            Status statusToUpdate = statusInDatabase.get();
 
-            String statusName = statusBody.getName();
-            if (statusName != null && !statusName.isEmpty()) {
-                //Verify if status name is not already used in database
-                Optional<Status> isStatusNameExist = statusService.getStatusByName(statusName);
-                if (isStatusNameExist.isEmpty()) {
-                    statusToUpdate.setName(statusName);
-                } else {
-                    throw new IllegalStateException("Ce nom de status est déjà utilisé");
-                }
-            }
-
-            return statusService.saveStatus(statusToUpdate);
-        } else {
-            return null;
+        if (statusInDatabase.isEmpty()) {
+            throw new IllegalArgumentException("Status introuvable");
         }
+
+        Status statusToUpdate = statusInDatabase.get();
+
+        String statusName = statusBody.getName();
+        if (statusName != null && !statusName.isEmpty()) {
+            //Verify if status name is not already used in database
+            Optional<Status> isStatusNameExist = statusService.getStatusByName(statusName);
+            if (isStatusNameExist.isEmpty()) {
+                statusToUpdate.setName(statusName);
+            } else {
+                throw new IllegalStateException("Ce nom de status est déjà utilisé");
+            }
+        }
+
+        Status updatedStatus = statusService.saveStatus(statusToUpdate);
+        return new StatusDTO(updatedStatus);
     }
 
     /**
