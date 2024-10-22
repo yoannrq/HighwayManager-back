@@ -6,6 +6,7 @@ import com.example.HighwayManager.model.Role;
 import com.example.HighwayManager.model.User;
 import com.example.HighwayManager.service.RoleService;
 import com.example.HighwayManager.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -38,7 +39,7 @@ public class UserController {
      * @throws IllegalArgumentException if role is not found
      */
     @PostMapping("/user")
-    public UserDTO createUser(@RequestBody UserCreationDTO userBody) {
+    public UserDTO createUser(@Valid @RequestBody UserCreationDTO userBody) {
         if (userService.getUserByEmail(userBody.getEmail()).isPresent()) {
             throw new IllegalStateException("Cet email est déjà utilisé");
         }
@@ -99,7 +100,7 @@ public class UserController {
      * @throws IllegalStateException if email is already used
      */
     @PatchMapping("/user/{id}")
-    public UserDTO updateUser(@PathVariable final long id, @RequestBody UserCreationDTO userBody) {
+    public UserDTO updateUser(@PathVariable final long id, @Valid @RequestBody UserCreationDTO userBody) {
         Optional<User> optionalUser = userService.getUserById(id);
 
         if (optionalUser.isEmpty()) {

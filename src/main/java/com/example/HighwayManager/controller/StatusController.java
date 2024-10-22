@@ -4,6 +4,7 @@ import com.example.HighwayManager.dto.StatusCreationDTO;
 import com.example.HighwayManager.dto.StatusDTO;
 import com.example.HighwayManager.model.Status;
 import com.example.HighwayManager.service.StatusService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import com.example.HighwayManager.exception.IllegalStateException;
@@ -30,7 +31,7 @@ public class StatusController {
      * @throws IllegalArgumentException if name is already used
      */
     @PostMapping("/status")
-    public StatusDTO createStatus(@RequestBody StatusCreationDTO statusBody) {
+    public StatusDTO createStatus(@Valid @RequestBody StatusCreationDTO statusBody) {
         //Verify if status name is not already used in database
         Optional<Status> isStatusNameExist = statusService.getStatusByName(statusBody.getName());
         if (isStatusNameExist.isPresent()) {
@@ -81,7 +82,7 @@ public class StatusController {
      * @throws IllegalStateException if status name is already used
      */
     @PatchMapping("/status/{id}")
-    public StatusDTO updateStatus(@PathVariable final long id, @RequestBody StatusCreationDTO statusBody) {
+    public StatusDTO updateStatus(@PathVariable final long id, @Valid @RequestBody StatusCreationDTO statusBody) {
         Optional<Status> statusInDatabase = statusService.getStatusById(id);
 
         if (statusInDatabase.isEmpty()) {

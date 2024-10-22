@@ -1,11 +1,17 @@
 package com.example.HighwayManager.controller;
 
+import com.example.HighwayManager.dto.RoleCreationDTO;
+import com.example.HighwayManager.dto.RoleDTO;
+import com.example.HighwayManager.exception.IllegalArgumentException;
 import com.example.HighwayManager.model.Role;
 import com.example.HighwayManager.service.RoleService;
 import com.example.HighwayManager.exception.IllegalStateException;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -20,69 +26,78 @@ public class RoleController {
 
     /**
      * Create - Add new role
-     * @param role as an object role
+     * @param roleBody as an object role
      * @return the role object saved
      */
     @PostMapping("/role")
-    public Role createRole(@RequestBody Role role) {
+    public RoleDTO createRole(@Valid @RequestBody RoleCreationDTO roleBody) {
         //Verify if the name is not already used in database
-        Optional<Role> existingRole = roleService.getRoleByRoleName(role.getName());
-        if (existingRole.isPresent()) {
-            return existingRole.get();
+        Role existingRole = roleService.getRoleByRoleName(roleBody.getName())
+                .orElse(null);
+        if (existingRole != null) {
+            return new RoleDTO(existingRole);
         } else {
-            return roleService.saveRole(role);
+            Role newRole = new Role();
+            newRole.setName(roleBody.getName());
+            Role savedRole = roleService.saveRole(newRole);
+            return new RoleDTO(savedRole);
         }
     }
 
     /**
      * Read - Get one role by id
      * @param id The id of the role
-     * @return role || null
+     * @return role
+     * @throws IllegalArgumentException if role is not found
      */
     @GetMapping("/role/{id}")
-    public Role getRoleById(@PathVariable final long id) {
-        Optional<Role> role = roleService.getRoleById(id);
-        return role.orElse(null);
+    public RoleDTO getRoleById(@PathVariable final long id) {
+        Optional<Role> optionalRole = roleService.getRoleById(id);
+        if (optionalRole.isPresent()) {
+            Role role = optionalRole.get();
+            return new RoleDTO(role);
+        } else {
+            throw new IllegalArgumentException("Role introuvable");
+        }
     }
 
     /**
      * Read - Get all roles
-     * @return An iterable object of roles
+     * @return List of roles
      */
     @GetMapping("/role")
-    public Iterable<Role> getAllRoles() {
-        return roleService.getAllRoles();
+    public List<RoleDTO> getAllRoles() {
+        Iterable<Role> roles = roleService.getAllRoles();
+        List<RoleDTO> roleDTOs = new ArrayList<>();
+        for (Role role : roles) {
+            roleDTOs.add(new RoleDTO(role));
+        }
+        return roleDTOs;
     }
 
     /**
      * Patch - Update an existing role
      * @param id - The id of the role to update
      * @param roleBody - The role object to update
-     * @return role || null - The role object updated
+     * @return roleDTO - The role object updated
+     * @throws IllegalArgumentException if role is not found
      * @throws IllegalStateException if name is already used
      */
     @PatchMapping("/role/{id}")
-    public Role updateRole(@PathVariable final long id, @RequestBody Role roleBody) {
+    public RoleDTO updateRole(@PathVariable final long id, @Valid @RequestBody RoleCreationDTO roleBody) {
         Optional<Role> roleInDatabase = roleService.getRoleById(id);
-        if (roleInDatabase.isPresent()) {
-            Role roleToUpdate = roleInDatabase.get();
-
-            String name = roleBody.getName();
-            if (name != null && !name.isEmpty()) {
-                //Verify if role name is not already used in database
-                Optional<Role> isRoleNameAlreadyUsed = roleService.getRoleByRoleName(name);
-                if (isRoleNameAlreadyUsed.isEmpty()) {
-                    roleToUpdate.setName(name);
-                } else {
-                    throw new IllegalStateException("Ce nom de rôle est déjà utilisé");
-                }
-
-            }
-
-            return roleService.saveRole(roleToUpdate);
-        } else {
-            return null;
+        if (roleInDatabase.isEmpty()) {
+            throw new IllegalArgumentException("Role introuvable");
         }
+
+        Role roleToUpdate = roleInDatabase.get();
+
+        if (roleToUpdate.getName() != null && !roleBody.getName().isEmpty()) {
+            roleToUpdate.setName(roleBody.getName());
+        }
+
+        Role savedRole = roleService.saveRole(roleToUpdate);
+        return new RoleDTO(savedRole);
     }
 
     /**

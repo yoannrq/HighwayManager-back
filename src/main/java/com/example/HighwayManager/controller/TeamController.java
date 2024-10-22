@@ -6,6 +6,7 @@ import com.example.HighwayManager.model.Team;
 import com.example.HighwayManager.model.User;
 import com.example.HighwayManager.service.TeamService;
 import com.example.HighwayManager.util.EntityValidator;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import com.example.HighwayManager.exception.IllegalStateException;
@@ -33,7 +34,7 @@ public class TeamController {
      * @throws  IllegalStateException if team name is already used
      */
     @PostMapping("/team")
-    public TeamDTO createTeam(@RequestBody TeamCreationDTO teamBody) {
+    public TeamDTO createTeam(@Valid @RequestBody TeamCreationDTO teamBody) {
         //Verify if name is not already in database
         Optional<Team> existingTeam = teamService.getTeamByName(teamBody.getTeamName());
         if (existingTeam.isPresent()) {
@@ -91,7 +92,7 @@ public class TeamController {
      * @throws IllegalStateException if team name is already used
      */
     @PatchMapping("/team/{id}")
-    public TeamDTO updateTeam(@PathVariable int id, @RequestBody TeamCreationDTO teamBody) {
+    public TeamDTO updateTeam(@PathVariable int id, @Valid @RequestBody TeamCreationDTO teamBody) {
         Optional<Team> teamInDatabase = teamService.getTeamById(id);
 
         if (teamInDatabase.isEmpty()) {
