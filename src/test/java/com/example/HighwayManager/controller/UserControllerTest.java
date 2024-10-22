@@ -56,6 +56,7 @@ class UserControllerTest {
         savedUser.setPassword("motdepasseHashé");
         savedUser.setFirstname("John");
         savedUser.setLastname("Doe");
+        savedUser.setRole(role);
 
         when(userService.getUserByEmail("nouveau@email.com")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("motdepasse")).thenReturn("motdepasseHashé");
@@ -87,7 +88,8 @@ class UserControllerTest {
         when(userService.getUserByEmail("existant@email.com")).thenReturn(Optional.of(new User()));
 
         // Act & Assert
-        assertThrows(IllegalStateException.class, () -> userController.createUser(user));
+        Exception exception = assertThrows(com.example.HighwayManager.exception.IllegalStateException.class, () -> userController.createUser(user));
+        assertEquals("Cet email est déjà utilisé", exception.getMessage());
     }
 
     @Test
