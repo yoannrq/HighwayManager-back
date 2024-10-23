@@ -54,7 +54,7 @@ public class StatusController {
     public StatusDTO getStatus(@PathVariable final long id) {
         Optional<Status> status = statusService.getStatusById(id);
         if (status.isEmpty()) {
-            throw new IllegalArgumentException("Status non trouvé");
+            throw new IllegalArgumentException("Statut non trouvé");
         } else {
             return new StatusDTO(status.get());
         }
@@ -86,7 +86,7 @@ public class StatusController {
         Optional<Status> statusInDatabase = statusService.getStatusById(id);
 
         if (statusInDatabase.isEmpty()) {
-            throw new IllegalArgumentException("Status introuvable");
+            throw new IllegalArgumentException("Statut introuvable");
         }
 
         Status statusToUpdate = statusInDatabase.get();
@@ -98,7 +98,7 @@ public class StatusController {
             if (isStatusNameExist.isEmpty()) {
                 statusToUpdate.setName(statusName);
             } else {
-                throw new IllegalStateException("Ce nom de status est déjà utilisé");
+                throw new IllegalStateException("Ce nom de statut est déjà utilisé");
             }
         }
 
