@@ -1,11 +1,17 @@
 package com.example.HighwayManager.controller;
 
+import com.example.HighwayManager.dto.EventTypeCreationDTO;
+import com.example.HighwayManager.dto.EventTypeDTO;
 import com.example.HighwayManager.model.EventType;
 import com.example.HighwayManager.service.EventTypeService;
 import com.example.HighwayManager.exception.IllegalStateException;
+import com.example.HighwayManager.exception.IllegalArgumentException;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -20,39 +26,53 @@ public class EventTypeController {
 
     /**
      * Create - Add a new event type
-     * @param eventType as an object event type
+     * @param eventTypeBody as an object event type
      * @return The event type object saved
      * @throws IllegalStateException if event type name is already used
      */
     @PostMapping("/event-type")
-    public EventType createEventType(@RequestBody EventType eventType) {
+    public EventTypeDTO createEventType(@Valid @RequestBody EventTypeCreationDTO eventTypeBody) {
         //Verify if event type name is not already in database
-        Optional<EventType> existingEventType = eventTypeService.getEventTypeByName(eventType.getName());
-        if (existingEventType.isPresent()) {
+        if (eventTypeService.getEventTypeByName(eventTypeBody.getName()).isPresent()) {
             throw new IllegalStateException("Ce nom de type d'évènement existe déjà");
         }
 
-        return eventTypeService.saveEventType(eventType);
+        EventType newEventType = new EventType();
+        newEventType.setName(eventTypeBody.getName());
+
+        EventType savedEventType = eventTypeService.saveEventType(newEventType);
+        return new EventTypeDTO(savedEventType);
     }
 
     /**
      * Read - Get one event type
      * @param id The id of the event type
-     * @return eventType || null
+     * @return eventType
+     * @throws IllegalArgumentException if event is not found
      */
     @GetMapping("/event-type/{id}")
-    public EventType getEventTypeById(@PathVariable long id) {
-        Optional<EventType> eventType = eventTypeService.getEventTypeById(id);
-        return eventType.orElse(null);
+    public EventTypeDTO getEventTypeById(@PathVariable long id) {
+        Optional<EventType> optionalEventType = eventTypeService.getEventTypeById(id);
+        if (optionalEventType.isPresent()) {
+            EventType eventType = optionalEventType.get();
+            return new EventTypeDTO(eventType);
+        } else {
+            throw new IllegalArgumentException("Type d'évènement introuvable");
+        }
     }
 
     /**
      * Read - Get all event types
-     * @return - An iterable object of event types
+     * @return - List of event types
      */
     @GetMapping("/event-type")
-    public Iterable<EventType> getEventTypes() {
-        return eventTypeService.getAllEventTypes();
+    public List<EventTypeDTO> getEventTypes() {
+        Iterable<EventType> eventTypes = eventTypeService.getAllEventTypes();
+        List<EventTypeDTO> eventTypesDTOs = new ArrayList<>();
+        for (EventType eventType : eventTypes) {
+            eventTypesDTOs.add(new EventTypeDTO(eventType));
+        }
+        return eventTypesDTOs;
     }
 
     /**
@@ -61,22 +81,27 @@ public class EventTypeController {
      * @param eventTypeBody - The event type object to updated
      * @return eventType || null - the event type object updated
      * @throws IllegalStateException if event type name is already used
+     * @throws IllegalArgumentException if event type is not found
      */
     @PatchMapping("/event-type/{id}")
-    public EventType updateEventType(@PathVariable long id, @RequestBody EventType eventTypeBody) {
+    public EventTypeDTO updateEventType(@PathVariable long id, @Valid @RequestBody EventType eventTypeBody) {
         Optional<EventType> eventTypeInDatabase = eventTypeService.getEventTypeById(id);
-        if (eventTypeInDatabase.isPresent()) {
-            EventType eventTypeToUpdate = eventTypeInDatabase.get();
 
-            String eventTypeName = eventTypeBody.getName();
-            if (eventTypeName != null && !eventTypeName.isEmpty()) {
-                eventTypeToUpdate.setName(eventTypeName);
-            }
-
-            return eventTypeService.saveEventType(eventTypeToUpdate);
-        } else {
-            return null;
+        if (eventTypeInDatabase.isEmpty()) {
+            throw new IllegalArgumentException("Type d'évènement introuvable");
         }
+
+        EventType eventTypeToUpdate = eventTypeInDatabase.get();
+
+        if (eventTypeBody.getName() != null && !eventTypeBody.getName().isEmpty() && !eventTypeToUpdate.getName().equals(eventTypeBody.getName())) {
+            if (eventTypeService.getEventTypeByName(eventTypeBody.getName()).isPresent()) {
+                throw new IllegalStateException("Ce nom de type d'évènement est déjà utilisé");
+            }
+            eventTypeToUpdate.setName(eventTypeBody.getName());
+        }
+
+        EventType savedEventType = eventTypeService.saveEventType(eventTypeToUpdate);
+        return new EventTypeDTO(savedEventType);
     }
 
     /**

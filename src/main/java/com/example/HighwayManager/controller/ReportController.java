@@ -8,6 +8,7 @@ import com.example.HighwayManager.model.User;
 import com.example.HighwayManager.service.EventService;
 import com.example.HighwayManager.service.ReportService;
 import com.example.HighwayManager.service.UserService;
+import com.example.HighwayManager.exception.IllegalArgumentException;
 import com.example.HighwayManager.util.EntityValidator;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
