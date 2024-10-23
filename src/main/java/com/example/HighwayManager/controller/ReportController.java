@@ -1,13 +1,20 @@
 package com.example.HighwayManager.controller;
 
+import com.example.HighwayManager.dto.ReportCreationDTO;
+import com.example.HighwayManager.dto.ReportDTO;
 import com.example.HighwayManager.model.Event;
 import com.example.HighwayManager.model.Report;
 import com.example.HighwayManager.model.User;
+import com.example.HighwayManager.service.EventService;
 import com.example.HighwayManager.service.ReportService;
+import com.example.HighwayManager.service.UserService;
 import com.example.HighwayManager.util.EntityValidator;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -16,82 +23,110 @@ public class ReportController {
 
     private final ReportService reportService;
     private final EntityValidator entityValidator;
+    private final UserService userService;
+    private final EventService eventService;
 
     @Autowired
-    public ReportController(ReportService reportService, EntityValidator entityValidator) {
+    public ReportController(ReportService reportService, EntityValidator entityValidator, UserService userService, EventService eventService) {
         this.reportService = reportService;
         this.entityValidator = entityValidator;
+        this.userService = userService;
+        this.eventService = eventService;
     }
 
     /**
      * Create - Add a new report
      * @param reportBody as an object report
      * @return The report object saved
+     * @throws IllegalArgumentException if user or event is not found
      */
     @PostMapping("/report")
-    public Report createReport(@RequestBody Report reportBody) {
+    public ReportDTO createReport(@Valid @RequestBody ReportCreationDTO reportBody) {
         //Verify if the event exist
-        User bodyUser = reportBody.getAuthor();
-        entityValidator.validateUser(bodyUser.getId());
+        entityValidator.validateUser(reportBody.getAuthorId());
 
         //Verify if the event exist
-        Event bodyEvent = reportBody.getEvent();
-        entityValidator.validateEvent(bodyEvent.getId());
+        entityValidator.validateEvent(reportBody.getEventId());
 
-        return reportService.saveReport(reportBody);
+        Report newReport = new Report();
+        User author = userService.getUserById(reportBody.getAuthorId())
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé"));
+        newReport.setAuthor(author);
+
+        Event event = eventService.getEventById(reportBody.getEventId())
+                .orElseThrow(() -> new IllegalArgumentException("Événement non trouvé"));
+        newReport.setEvent(event);
+
+        Report savedReport = reportService.saveReport(newReport);
+        return new ReportDTO(savedReport);
     }
 
     /**
      * Read - Get one report
      * @param id The id of the report
-     * @return report || null
+     * @return report
+     * @throws IllegalArgumentException if report is not found
      */
     @GetMapping("/report/{id}")
-    public Report getReport(@PathVariable long id) {
-        Optional<Report> report = reportService.getReportById(id);
-        return report.orElse(null);
+    public ReportDTO getReport(@PathVariable long id) {
+        Optional<Report> optionalReport = reportService.getReportById(id);
+        if (optionalReport.isPresent()) {
+            Report report = optionalReport.get();
+            return new ReportDTO(report);
+        } else {
+            throw new IllegalArgumentException("Rapport introuvable");
+        }
     }
 
     /**
      * Read - Get all reports
-     * @return - An iterable object of reports
+     * @return - List of reports
      */
     @GetMapping("/report")
-    public Iterable<Report> getAllReports() {
-        return reportService.getAllReports();
+    public List<ReportDTO> getAllReports() {
+        Iterable<Report> reports = reportService.getAllReports();
+        List<ReportDTO> reportDTOs = new ArrayList<>();
+        for (Report report : reports) {
+            reportDTOs.add(new ReportDTO(report));
+        }
+        return reportDTOs;
     }
 
     /**
      * Patch - Update an existing report
      * @param id - The id of the report to update
-     * @param reportBody - The report object to update
-     * @return report || null - The report object updated
+     * @param reportBody - The Report object containing updated fields
+     * @return ReportDTO - The updated report as a DTO
+     * @throws IllegalArgumentException if report, user or event is not found
      */
     @PatchMapping("/report/{id}")
-    public Report updateReport(@PathVariable long id, @RequestBody Report reportBody) {
-        Optional<Report> reportInDatabase = reportService.getReportById(id);
-        if (reportInDatabase.isPresent()) {
-            Report reportToUpdate = reportInDatabase.get();
+    public ReportDTO updateReport(@PathVariable final long id, @Valid @RequestBody ReportCreationDTO reportBody) {
+        Optional<Report> optionalReport = reportService.getReportById(id);
 
-            User authorBody = reportBody.getAuthor();
-            if (authorBody != null && authorBody.getId() != null) {
-                //Verify if the user is existing
-                entityValidator.validateUser(authorBody.getId());
-                reportToUpdate.setAuthor(authorBody);
-            }
-
-            Event eventBody = reportBody.getEvent();
-            if (eventBody != null && eventBody.getId() != null) {
-                //Verify if the event is existing
-                entityValidator.validateEvent(eventBody.getId());
-                reportToUpdate.setEvent(eventBody);
-            }
-
-            return reportService.saveReport(reportToUpdate);
-        } else {
-            return null;
+        if (optionalReport.isEmpty()) {
+            throw new IllegalArgumentException("Rapport introuvable");
         }
+
+        Report reportToUpdate = optionalReport.get();
+
+        if (reportBody.getAuthorId() != null) {
+            entityValidator.validateUser(reportBody.getAuthorId());
+            User author = userService.getUserById(reportBody.getAuthorId())
+                    .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
+            reportToUpdate.setAuthor(author);
+        }
+
+        if (reportBody.getEventId() != null) {
+            entityValidator.validateEvent(reportBody.getEventId());
+            Event event = eventService.getEventById(reportBody.getEventId())
+                    .orElseThrow(() -> new IllegalArgumentException("Événement introuvable"));
+            reportToUpdate.setEvent(event);
+        }
+
+        Report savedReport = reportService.saveReport(reportToUpdate);
+        return new ReportDTO(savedReport);
     }
+
 
     /**
      * Delete - Delete a report
