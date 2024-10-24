@@ -13,10 +13,16 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 public class HighwayManagerApplication {
 
 	public static void main(String[] args) {
-		Dotenv dotenv = Dotenv.load();
-		System.setProperty("spring.datasource.url", dotenv.get("DB_URL"));
-		System.setProperty("spring.datasource.username", dotenv.get("DB_USERNAME"));
-		System.setProperty("spring.datasource.password", dotenv.get("DB_PASSWORD"));
+		if (System.getenv("ENVIRONMENT") == null || System.getenv("ENVIRONMENT").equals("development")) {
+			try {
+				Dotenv dotenv = Dotenv.load();
+				System.setProperty("spring.datasource.url", dotenv.get("DB_URL"));
+				System.setProperty("spring.datasource.username", dotenv.get("DB_USERNAME"));
+				System.setProperty("spring.datasource.password", dotenv.get("DB_PASSWORD"));
+			} catch (Exception e) {
+				System.out.println(".env file not found, using system environment variables");
+			}
+		}
 
 		SpringApplication.run(HighwayManagerApplication.class, args);
 	}
