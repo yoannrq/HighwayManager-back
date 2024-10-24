@@ -1,13 +1,13 @@
 # Étape de build
-FROM maven:3.9-eclipse-temurin-21-focal AS build
+FROM maven:3.5.2-jdk-21-alpine AS builder
 WORKDIR /build
 COPY pom.xml .
 COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Étape de production
-FROM eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-COPY --from=build /build/target/*.jar app.jar
-EXPOSE 8080
+COPY --from=builder /build/target/*.jar app.jar
+EXPOSE 8081
 ENTRYPOINT ["java", "-jar", "app.jar"]
