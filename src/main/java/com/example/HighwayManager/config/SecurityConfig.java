@@ -56,13 +56,18 @@ public class SecurityConfig {
                 "X-XSRF-TOKEN",
                 "Accept",
                 "Origin",
+                "Access-Control-Allow-Origin",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers",
                 "Access-Control-Allow-Headers"
         ));
         configuration.setExposedHeaders(List.of(
                 "X-XSRF-TOKEN",
                 "Content-Type",
                 "Authorization",
-                "Access-Control-Allow-Origin"
+                "Access-Control-Allow-Origin",
+                "Access-Control-Allow-Headers",
+                "Access-Control-Allow-Methods"
         ));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
