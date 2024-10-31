@@ -2,6 +2,7 @@ package com.example.HighwayManager.controller;
 
 import com.example.HighwayManager.dto.UserCreationDTO;
 import com.example.HighwayManager.dto.UserDTO;
+import com.example.HighwayManager.dto.UserUpdateDTO;
 import com.example.HighwayManager.model.Role;
 import com.example.HighwayManager.model.User;
 import com.example.HighwayManager.service.RoleService;
@@ -100,7 +101,7 @@ public class UserController {
      * @throws IllegalStateException if email is already used
      */
     @PatchMapping("/user/{id}")
-    public UserDTO updateUser(@PathVariable final long id, @Valid @RequestBody UserCreationDTO userBody) {
+    public UserDTO updateUser(@PathVariable final long id, @Valid @RequestBody UserUpdateDTO userBody) {
         Optional<User> optionalUser = userService.getUserById(id);
 
         if (optionalUser.isEmpty()) {
