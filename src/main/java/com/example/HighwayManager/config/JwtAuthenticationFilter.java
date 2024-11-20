@@ -2,7 +2,6 @@ package com.example.HighwayManager.config;
 
 import com.example.HighwayManager.service.JwtService;
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;

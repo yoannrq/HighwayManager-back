@@ -3,7 +3,6 @@ package com.example.HighwayManager.controller;
 import com.example.HighwayManager.dto.AuthRequestDTO;
 import com.example.HighwayManager.dto.AuthResponseDTO;
 import com.example.HighwayManager.service.AuthenticationService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
