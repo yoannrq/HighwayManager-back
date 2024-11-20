@@ -7,10 +7,10 @@ ON CONFLICT (name) DO NOTHING;
 
 -- Users
 INSERT INTO users (firstname, lastname, role_id, email, password) VALUES
-                                                                      ('Thomas', 'Martin', 1, 'thomas.martin@company.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewKXL3/C9nqbQZza'),
-                                                                      ('Marie', 'Dubois', 2, 'marie.dubois@company.com', '$2a$12$z5YyUgz9Yh6d7sEOzEfFBOK4/hmPexDj5sN9JxR3HKEv.w5RwjyXO'),
-                                                                      ('Lucas', 'Bernard', 2, 'lucas.bernard@company.com', '$2a$12$mR.2p/8r1AH9HWUYmPmqV.1KzHV3Fy3R/kg9h6cVvz9kgpR.kIR2m'),
-                                                                      ('Sophie', 'Petit', 3, 'sophie.petit@company.com', '$2a$12$23Lz0OZB9nHI0BzFSgZxj.UK2YJ7EiCwwS.h8w3JvLBB1HQGvZoii')
+                                                                      ('Thomas', 'Martin', 1, 'thomas.martin@company.com', '$2y$12$s4OL4OvWfxtKN2osX7cn6uu0Xu0sdfE0ktFybCtLSlPkjo.3u.Pim'),
+                                                                      ('Marie', 'Dubois', 2, 'marie.dubois@company.com', '$2y$12$dq0lEPyuRBEIgI6HueBz0.fGHv.hv96WupF3u0hfIYmW6GoJBb/aK'),
+                                                                      ('Lucas', 'Bernard', 2, 'lucas.bernard@company.com', '$2y$12$smKI2Ycm32ArO4dcZEIMWeSOrKQwoEZ1s7RULY1xL7GDYD0zB5e4K'),
+                                                                      ('Sophie', 'Petit', 3, 'sophie.petit@company.com', '$2y$12$wq3BI8FM9BwMkcF1HYkVv.cS6dzPapdfdS5IABFNMD6SJp/gjewda')
 ON CONFLICT (email) DO NOTHING;
 
 --Teams
