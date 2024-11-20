@@ -33,7 +33,6 @@ public class AuthController {
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Email ou mot de passe incorrect"));
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ErrorResponse("Erreur serveur : " + e.getMessage()));
@@ -41,7 +40,7 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(HttpServletRequest request) {
+    public ResponseEntity<String> logout() {
         SecurityContextHolder.clearContext();
         return ResponseEntity.ok("Déconnexion réussie");
     }
