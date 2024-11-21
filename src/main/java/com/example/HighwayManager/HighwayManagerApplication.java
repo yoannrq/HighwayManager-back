@@ -20,6 +20,7 @@ public class HighwayManagerApplication {
 				System.setProperty("spring.datasource.username", dotenv.get("DB_USERNAME"));
 				System.setProperty("spring.datasource.password", dotenv.get("DB_PASSWORD"));
 				System.setProperty("jwt.secret", dotenv.get("JWT_SECRET"));
+				System.setProperty("spring.profiles.active", dotenv.get("ENVIRONMENT"));
 			} catch (Exception e) {
 				System.out.println(".env file not found, using system environment variables");
 			}
