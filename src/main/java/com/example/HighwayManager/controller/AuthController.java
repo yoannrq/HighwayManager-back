@@ -3,6 +3,7 @@ package com.example.HighwayManager.controller;
 import com.example.HighwayManager.dto.AuthRequestDTO;
 import com.example.HighwayManager.dto.AuthResponseDTO;
 import com.example.HighwayManager.service.AuthenticationService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -23,10 +24,10 @@ public class AuthController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> authenticate(@RequestBody AuthRequestDTO request) {
+    public ResponseEntity<?> authenticate(@RequestBody AuthRequestDTO request, HttpServletResponse response) {
         try {
-            AuthResponseDTO response = authenticationService.authenticate(request);
-            return ResponseEntity.ok(response);
+            AuthResponseDTO authResponse = authenticationService.authenticate(request, response);
+            return ResponseEntity.ok(authResponse);
         } catch (BadCredentialsException e) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
@@ -39,7 +40,8 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<String> logout() {
+    public ResponseEntity<String> logout(HttpServletResponse response) {
+        authenticationService.logout(response);
         SecurityContextHolder.clearContext();
         return ResponseEntity.ok("Déconnexion réussie");
     }
